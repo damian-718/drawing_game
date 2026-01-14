@@ -7,6 +7,6 @@ Seperate CSS into its own modules,
 
 TechStack:
 
-Frontend: TypeScript/React
-Networking: Socket.io
-Backend: Node.js
+Frontend: TypeScript/React  
+Networking: Socket.io  
+Backend: Node.js  
