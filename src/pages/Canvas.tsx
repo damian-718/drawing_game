@@ -10,7 +10,7 @@ export default function Canvas() {
   const [lastPos, setLastPos] = useState<{ x: number; y: number } | null>(null); // track mouse position when drawing, default null. lastpos since we draw from last pos to new pos of mouse
   const socketRef = useRef<Socket | null>(null); // useref is a reference to elements to be used elsewhere in the code
 
-   // Connect to server. useeffect runs ONCE on mount or room change, but the socket stays active whole time, the useeffect sets up the socket per user
+   // Connect to server. useeffect runs ONCE on mount or room change, but the socket stays active whole time, the useeffect sets up the socket
   useEffect(() => { // this is a side effect triggered when component mounts or roomname changes
     const socket = io("http://localhost:4000"); // sends to node.js backend server
     socketRef.current = socket; // store current socket instance
