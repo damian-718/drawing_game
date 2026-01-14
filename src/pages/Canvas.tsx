@@ -7,7 +7,26 @@ export default function Canvas() {
   const { roomName } = useParams<{ roomName: string }>(); // typescript is saying roomName is a string
   const canvasRef = useRef<HTMLCanvasElement>(null); // create the reference to the canvas element, null since it doesnt exist untill rendered
   const [isDrawing, setIsDrawing] = useState(false); // if drawing then track mouse position, default false
-  const [lastPos, setLastPos] = useState<{ x: number; y: number } | null>(null); // track mouse position when drawing, default null. lastpos since we draw from last pos to new pos of mouse  
+  const [lastPos, setLastPos] = useState<{ x: number; y: number } | null>(null); // track mouse position when drawing, default null. lastpos since we draw from last pos to new pos of mouse
+  const socketRef = useRef<Socket | null>(null);
+
+   // Connect to server
+  useEffect(() => {
+    const socket = io("http://localhost:4000");
+    socketRef.current = socket;
+
+    socket.emit("joinRoom", roomName!);
+
+    socket.on("drawing", (line) => {
+      const ctx = canvasRef.current?.getContext("2d");
+      if (!ctx) return;
+      drawLine(ctx, line.from, line.to);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [roomName]);
 
   // Helper to get mouse position relative to canvas
   const getMousePos = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -20,28 +39,40 @@ export default function Canvas() {
     };
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-    setIsDrawing(true);
-    setLastPos(getMousePos(e));
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d"); // ? means only call getcontext if not null, we want to give react time to render canvas so it could be null at first. getcontext("2d") returns 2d drawing context which allows gives methods like draw shapes, lines, text, etc...
-    if (!ctx || !lastPos) return;
-
-    const { x, y } = getMousePos(e);
+  const drawLine = (
+    ctx: CanvasRenderingContext2D,
+    from: { x: number; y: number },
+    to: { x: number; y: number }
+  ) => {
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
     ctx.strokeStyle = "black";
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
-
-    ctx.beginPath();
-    ctx.moveTo(lastPos.x, lastPos.y);
-    ctx.lineTo(x, y);
     ctx.stroke();
+  };
 
-    setLastPos({ x, y });
+//   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+//     setIsDrawing(true);
+//     setLastPos(getMousePos(e));
+//   };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    if (!isDrawing || !lastPos || !socketRef.current) return;
+    const currentPos = getMousePos(e)!;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+
+    drawLine(ctx, lastPos, currentPos);
+
+    // Emit line to server
+    socketRef.current.emit("drawing", {
+      roomName,
+      line: { from: lastPos, to: currentPos },
+    });
+
+    setLastPos(currentPos);
   };
 
   const stopDrawing = () => {
@@ -59,10 +90,13 @@ export default function Canvas() {
         width={800}
         height={600}
         style={{ border: "1px solid black", cursor: "crosshair" }}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
+        onMouseDown={(e) => {
+          setIsDrawing(true);
+          setLastPos(getMousePos(e));
+        }}
+        onMouseMove={handleMouseMove}
         onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
+        onMouseLeave={() => setIsDrawing(false)}
       />
       <p>Draw with your mouse!</p>
     </div>
