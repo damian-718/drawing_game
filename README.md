@@ -2,8 +2,8 @@ This is a prototype (work in progress) for a drawing with friends browser game. 
 
 TODO: '
 
-Cleanup code,
-Seperate CSS into its own modules,
+Cleanup code  
+Seperate CSS into its own modules  
 
 TechStack:
 
