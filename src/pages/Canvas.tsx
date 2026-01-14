@@ -24,7 +24,7 @@ export default function Canvas() {
     setIsDrawing(true);
     setLastPos(getMousePos(e));
   };
-
+  // need to split up draw function. This is because if we put socket.emit here, we cant use this function to also listen (socket.on) or else it breaks.
   const draw = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     if (!isDrawing) return;
     const canvas = canvasRef.current;
