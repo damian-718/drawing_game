@@ -27,7 +27,16 @@ export default function Canvas() {
     socket.on("drawing", (line) => { //listenes to drawing events and draws those events on recieveing clients canvas
       const ctx = canvasRef.current?.getContext("2d"); // gets the drawable board to draw the line emitted, only users in the room as per backend socket.io. No need to track room here since drawing events only emitted by the backend to users in the same room.
       if (!ctx) return;
+      drawLine(ctx, line.from, line.to, line.color, line.size, line.isErasor);    
+    });
+
+    socket.on("initDrawing", (lines) => {
+      const ctx = canvasRef.current?.getContext("2d");
+      if (!ctx) return;
+
+      lines.forEach((line: any) => {
       drawLine(ctx, line.from, line.to, line.color, line.size, line.isErasor);
+      });
     });
 
     return () => {

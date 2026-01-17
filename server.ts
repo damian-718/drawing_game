@@ -10,6 +10,15 @@ const io = new Server(httpServer, {
   cors: { origin: "*" }, // allow all origins for local dev
 });
 
+type Line = {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  color?: string;
+  width?: number;
+};
+
+const roomDrawings: Record<string, Line[]> = {};
+
 // Store rooms
 const rooms: Record<string, Set<string>> = {};  // a map where room(string) is the key and its values are the socketIds of people who connected(set of strings). set prevents dupes.
 
@@ -21,10 +30,19 @@ io.on("connection", (socket) => {
     socket.join(roomName); // socket.join is a socket.io built in feature, adds socket to a internal room. enables the socket.to(data.roomname).emit, so anyone in this room/group gets the emit
     if (!rooms[roomName]) rooms[roomName] = new Set(); // if room doesnt exist, create it and initialize
     rooms[roomName].add(socket.id); // add to the values set for specific roomname key (dictionary)
+
+    // send current drawing to new users
+    socket.emit("initDrawing", roomDrawings[roomName]);
+
     console.log(`${socket.id} joined ${roomName}`);
   });
 
   socket.on("drawing", (data: { roomName: string; line: any }) => { // listens to a drawing event from the frontend/client. Payload has which room and the line data
+    if (!roomDrawings[data.roomName]) {
+      roomDrawings[data.roomName] = [];
+    }
+    roomDrawings[data.roomName].push(data.line);
+
     // Broadcast to everyone in the same room except sender
     socket.to(data.roomName).emit("drawing", data.line); // THIS IS WHAT SENDS THE DRAWING EVENT TO EVERYONE IN THE ROOM. socket.join() is socket.io internal room system, not to be confused with the rooms const dictionary. Socket.io manages its own internal rooms, when a socket.join(roomName) socket manages that room internally and broadcasts events to everyone in it.
   });
