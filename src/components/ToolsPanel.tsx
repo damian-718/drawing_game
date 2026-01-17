@@ -9,6 +9,7 @@ interface ToolsPanelProps {
   setPenSize: (size: number) => void;
   eraserMode: boolean;
   setEraserMode: (mode: boolean) => void;
+  onClear: () => void; // () means takes no arguments, void means no return, it just does something same as java.
 }
 // color panel
 const commonColors = ["#000000", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
@@ -20,6 +21,7 @@ export default function ToolsPanel({
   setPenSize,
   eraserMode,
   setEraserMode,
+  onClear,
 }: ToolsPanelProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -63,6 +65,10 @@ export default function ToolsPanel({
 
       <button onClick={() => setEraserMode(!eraserMode)}>
         {eraserMode ? "Eraser On" : "Eraser Off"}
+      </button>
+
+      <button onClick={onClear}>
+        Clear Canvas
       </button>
     </div>
   );

@@ -32,7 +32,7 @@ io.on("connection", (socket) => {
     rooms[roomName].add(socket.id); // add to the values set for specific roomname key (dictionary)
 
     // send current drawing to new users
-    socket.emit("initDrawing", roomDrawings[roomName]);
+    socket.emit("initDrawing", roomDrawings[roomName]); // sends the line objects in this dict to users who loaded in
 
     console.log(`${socket.id} joined ${roomName}`);
   });
@@ -47,11 +47,30 @@ io.on("connection", (socket) => {
     socket.to(data.roomName).emit("drawing", data.line); // THIS IS WHAT SENDS THE DRAWING EVENT TO EVERYONE IN THE ROOM. socket.join() is socket.io internal room system, not to be confused with the rooms const dictionary. Socket.io manages its own internal rooms, when a socket.join(roomName) socket manages that room internally and broadcasts events to everyone in it.
   });
 
+  socket.on("clearCanvas", (data: { roomName: string }) => {
+  // Broadcast to everyone in the same room except sender
+    socket.to(data.roomName).emit("clearCanvas");
+    // Reset the persisted drawing for this room
+    if (roomDrawings[data.roomName]) {
+      roomDrawings[data.roomName] = [];
+    }
+  });
+  // { }) lets you run multiple things inside the arrow fucntions, with just => its one function. block body vs concise body.
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
     // Remove user from rooms
-    Object.keys(rooms).forEach((room) => rooms[room].delete(socket.id)); // when socket (user) diconnectes, remove from all rooms they were in
+    Object.keys(rooms).forEach((room) => {
+      rooms[room].delete(socket.id); // when socket (user) diconnectes, remove from all rooms they were in
+
+    // If room is now empty, delete it
+      if (rooms[room].size === 0) {
+        delete rooms[room];           // remove from rooms map
+        delete roomDrawings[room];    // also clear persisted drawings
+        console.log(`Room ${room} deleted (empty)`);
+      }
+    });
   });
+
 });
 // 4000 is just the port backend listens on, frontend connects to this when canvas is loaded
 httpServer.listen(4000, () => console.log("Socket.IO server running on :4000"));

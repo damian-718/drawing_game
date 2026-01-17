@@ -39,6 +39,14 @@ export default function Canvas() {
       });
     });
 
+    // Listen for clear events
+    socket.on("clearCanvas", () => {
+      const ctx = canvasRef.current?.getContext("2d");
+      const canvas = canvasRef.current;
+      if (!ctx || !canvas) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -107,6 +115,20 @@ export default function Canvas() {
     setIsDrawing(false);
     setLastPos(null);
   };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return; 
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    // Clear the entire canvas area
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Emit a "clearCanvas" event to the room via socket
+    if (socketRef.current) {
+      socketRef.current.emit("clearCanvas", { roomName });
+    }
+  };
    
   // when we say a component mounted, its when the component loads, so in this case someone in the play url clicks a room, now it takes us to canvas and canvas "mounts"
   // component rerenders on state changes
@@ -133,6 +155,7 @@ export default function Canvas() {
         setPenSize={setPenSize}
         eraserMode={eraserMode}
         setEraserMode={setEraserMode}
+        onClear ={clearCanvas}
       />
       <p>Draw with your mouse!</p>
     </div>
