@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useRef, useEffect, useState } from "react"; // use ref gives us a reference to a DOM element (canvas) so we can draw. dom element is component rendered on the screen
 import { io, Socket } from "socket.io-client";
 import ToolsPanel from "../components/ToolsPanel";
+import ChatPanel from "../components/ChatPanel";
 
 export default function Canvas() {
   // Canvas is dynammic, it goes to the page a user selected as a room. So useParams is able to grab the specific route clicked on for canvas. canvas/:roomname, useparams gets the current path
@@ -16,12 +17,19 @@ export default function Canvas() {
   const [penSize, setPenSize] = useState(2);
   const [eraserMode, setEraserMode] = useState(false);
 
+  const [socketConnected, setSocketConnected] = useState(false);
+
    // Connect to server. useeffect runs ONCE on mount or room change, but the socket stays active whole time, the useeffect sets up the socket
   useEffect(() => { // this is a side effect triggered when component mounts or roomname changes
     const socket = io("http://localhost:4000"); // sends to node.js backend server
     socketRef.current = socket; // store current socket instance
     // emit sends activity, on recieves
-    socket.emit("joinRoom", roomName!); // tells backend server to put me in this room so i only listen to events in this room
+
+    socket.on("connect", () => {
+      setSocketConnected(true); // triggers re-render
+      socket.emit("joinRoom", roomName!);
+    });
+    //socket.emit("joinRoom", roomName!); // tells backend server to put me in this room so i only listen to events in this room
     
     // **this line is why we split up the draw into drawline and handlemousemove. If we listen with socket.on, the previous draw would need to have socket.emit inside it which results in a cycle. on trtggers emit, emit triggers on...
     socket.on("drawing", (line) => { //listenes to drawing events and draws those events on recieveing clients canvas
@@ -34,8 +42,8 @@ export default function Canvas() {
       const ctx = canvasRef.current?.getContext("2d");
       if (!ctx) return;
 
-      lines.forEach((line: any) => {
-      drawLine(ctx, line.from, line.to, line.color, line.size, line.isErasor);
+      (lines ?? []).forEach((line: any) => {
+        drawLine(ctx, line.from, line.to, line.color, line.size, line.isErasor);
       });
     });
 
@@ -129,7 +137,7 @@ export default function Canvas() {
       socketRef.current.emit("clearCanvas", { roomName });
     }
   };
-   
+  
   // when we say a component mounted, its when the component loads, so in this case someone in the play url clicks a room, now it takes us to canvas and canvas "mounts"
   // component rerenders on state changes
   return (
@@ -157,6 +165,9 @@ export default function Canvas() {
         setEraserMode={setEraserMode}
         onClear ={clearCanvas}
       />
+      {socketRef.current && roomName && (
+        <ChatPanel socket={socketRef.current} roomName={roomName} />
+      )}
       <p>Draw with your mouse!</p>
     </div>
   );
