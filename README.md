@@ -1,9 +1,10 @@
-This is a prototype (work in progress) for a drawing with friends browser game. Websocket is in a feature branch, where you can start the dev server and have many local clients connect and draw.
+This is a prototype (work in progress) for a drawing with friends browser game. Supports real time chat and drawings. Game logic coming soon.
 
 TODO:
 
-Cleanup code
-Seperate CSS into its own modules
+AWS deployment  
+Code cleanup  
+Game Logic  
 
 TechStack:
 
