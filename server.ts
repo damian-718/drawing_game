@@ -27,6 +27,7 @@ type ChatMessage = {
 const roomDrawings: Record<string, Line[]> = {};
 // Store rooms
 const rooms: Record<string, Set<string>> = {};  // a map where room(string) is the key and its values are the socketIds of people who connected(set of strings). set prevents dupes.
+const activeRooms: Set<string> = new Set(); // just stores room names
 
 // store chat messages
 const chat: Record<string, String[]> = {};
@@ -37,7 +38,7 @@ io.on("connection", (socket) => {
 
   socket.on("joinRoom", (roomName: string) => { // LISTENS TO A joinRoom EVENT SENT BY THE FRONTEND (socket.emit("joinRoom", roomName))
     socket.join(roomName); // socket.join is a socket.io built in feature, adds socket to a internal room. enables the socket.to(data.roomname).emit, so anyone in this room/group gets the emit
-    if (!rooms[roomName]) rooms[roomName] = new Set(); // if room doesnt exist, create it and 
+    if (!rooms[roomName]) rooms[roomName] = new Set(); // if room doesnt exist, initialize
     if (!chat[roomName]) chat[roomName] = []; // if chat doesnt exist, create it and initialize
     rooms[roomName].add(socket.id); // add to the values set for specific roomname key (dictionary)
 
@@ -76,6 +77,26 @@ io.on("connection", (socket) => {
       roomDrawings[data.roomName] = [];
     }
   });
+
+  // Create room
+  socket.on("createRoom", (roomName: string) => {
+    if (!activeRooms.has(roomName)) {
+      activeRooms.add(roomName);          // persist room name
+    }
+    if (!rooms[roomName]) {
+      rooms[roomName] = new Set(); // track users in a room
+    }
+    rooms[roomName].add(socket.id);
+    socket.join(roomName);
+    // Broadcast updated room list to all clients
+    io.emit("activeRooms", Array.from(activeRooms));
+  });
+
+  // Send active rooms on request
+  socket.on("getActiveRooms", () => {
+    socket.emit("activeRooms", Array.from(activeRooms));
+  });
+
   // { }) lets you run multiple things inside the arrow fucntions, with just => its one function. block body vs concise body.
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { io, Socket } from "socket.io-client";
 
 export default function Play() {
 
@@ -11,12 +12,34 @@ export default function Play() {
   const [roomName, setRoomName] = useState("");       // input value default to empty string
   const [rooms, setRooms] = useState<string[]>([]);   // list of created rooms default to empty list
 
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    const socket = io("http://localhost:4000");
+    socketRef.current = socket;
+    // Request current active rooms
+    socket.emit("getActiveRooms");
+
+    // Listen for active rooms from server
+    socket.on("activeRooms", (roomList: string[]) => {
+      setRooms(roomList);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   // Create a new 
   // when typing in the input container, it registers keystrokes via onchange and sets roomname to the updated value. when button is clicked, onclick funciton is called and uses the roomname to update rooms list with this new roomname added
   const handleCreateRoom = () => {
-    if (!roomName.trim()) return; // ignore empty names
-    setRooms([...rooms, roomName.trim()]); // ... spreads current rooms list and adds the new room and sets new state
-    setRoomName(""); // clear input
+    if (!roomName.trim() || !socketRef.current) return; // ignore empty names
+  
+    // Ensure socket is connected
+    if (socketRef.current.connected) {
+      socketRef.current.emit("createRoom", roomName.trim());
+      setRoomName("");
+    }
   };
 
   // Join a room (for now, just alert)

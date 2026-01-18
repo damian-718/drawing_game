@@ -140,35 +140,39 @@ export default function Canvas() {
   
   // when we say a component mounted, its when the component loads, so in this case someone in the play url clicks a room, now it takes us to canvas and canvas "mounts"
   // component rerenders on state changes
+  // flexbox allows us to change layout of components, display : flex means side by side
   return (
-    <div style={{ textAlign: "center", marginTop: "20px" }}>
+    <div style={{ display: "flex", height: "600px", gap: "20px", padding: "20px" }}> 
       <h1>Room: {roomName}</h1>
-      <canvas // this is the canvas component, inside is the mouse events so they only work inside this container
-        ref={canvasRef} // react automatically sets the canvasref when it loads, default null but once mounted its not null automatically
-        width={800}
-        height={600}
-        style={{ border: "1px solid black", cursor: "crosshair" }}
-        onMouseDown={(e) => {
-          setIsDrawing(true);
-          setLastPos(getMousePos(e));
-        }}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDrawing}
-        onMouseLeave={() => setIsDrawing(false)}
-      />
-      <ToolsPanel
-        penColor={penColor}
-        setPenColor={setPenColor}
-        penSize={penSize}
-        setPenSize={setPenSize}
-        eraserMode={eraserMode}
-        setEraserMode={setEraserMode}
-        onClear ={clearCanvas}
-      />
-      {socketRef.current && roomName && (
-        <ChatPanel socket={socketRef.current} roomName={roomName} />
-      )}
-      <p>Draw with your mouse!</p>
+      <div style={{ flex: 3 }}>
+        <canvas // this is the canvas component, inside is the mouse events so they only work inside this container
+          ref={canvasRef} // react automatically sets the canvasref when it loads, default null but once mounted its not null automatically
+          width={800}
+          height={600}
+          style={{ border: "1px solid black", cursor: "crosshair" }}
+          onMouseDown={(e) => {
+            setIsDrawing(true);
+            setLastPos(getMousePos(e));
+          }}
+          onMouseMove={handleMouseMove}
+          onMouseUp={stopDrawing}
+          onMouseLeave={() => setIsDrawing(false)}
+        />
+        <ToolsPanel
+          penColor={penColor}
+          setPenColor={setPenColor}
+          penSize={penSize}
+          setPenSize={setPenSize}
+          eraserMode={eraserMode}
+          setEraserMode={setEraserMode}
+          onClear ={clearCanvas}
+        />
+      </div>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", border: "1px solid #ccc", borderRadius: "8px", overflow: "hidden" }}>
+        {socketRef.current && roomName && (
+          <ChatPanel socket={socketRef.current} roomName={roomName} />
+        )}
+      </div>
     </div>
   );
 }
