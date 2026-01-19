@@ -59,6 +59,7 @@ export default function Play() {
           placeholder="Room Name"
           value={roomName}
           onChange={(e) => setRoomName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
           style={styles.input}
         />
         <button onClick={handleCreateRoom} style={styles.createButton}>

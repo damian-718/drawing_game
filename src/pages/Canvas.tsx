@@ -61,6 +61,22 @@ export default function Canvas() {
   }, [roomName]); // this is how it knows to run the effect not only on mount but also when roomname changes. So roomname comes from the params which is dynamic url. so user joins a different room, the param is different etc..
       // lets say you have user1 in canvas/test1. they use a sidebar and go canvas/test2 without reloading canvas. Thats why we need this. it will create new socket connection and disconnect previous.
 
+  // Additional useEffect to Resize canvas to fit container
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resizeCanvas = () => {
+      canvas.width = canvas.parentElement?.clientWidth ?? 800;
+      canvas.height = canvas.parentElement?.clientHeight ?? 600;
+    };
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas(); // initial sizing
+
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, []); // [] means only run once on mount
+  
   // Helper to get mouse position relative to canvas
   const getMousePos = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     const canvas = canvasRef.current;
@@ -142,13 +158,11 @@ export default function Canvas() {
   // component rerenders on state changes
   // flexbox allows us to change layout of components, display : flex means side by side
   return (
-    <div style={{ display: "flex", height: "600px", gap: "20px", padding: "20px" }}> 
+    <div style={{ display: "flex", height: "80vh", gap: "1rem", padding: "1rem" }}> 
       <h1>Room: {roomName}</h1>
       <div style={{ flex: 3 }}>
         <canvas // this is the canvas component, inside is the mouse events so they only work inside this container
           ref={canvasRef} // react automatically sets the canvasref when it loads, default null but once mounted its not null automatically
-          width={800}
-          height={600}
           style={{ border: "1px solid black", cursor: "crosshair" }}
           onMouseDown={(e) => {
             setIsDrawing(true);

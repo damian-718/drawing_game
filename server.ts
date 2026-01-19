@@ -109,6 +109,7 @@ io.on("connection", (socket) => {
         delete rooms[roomName];           // remove from rooms map
         delete roomDrawings[roomName];    // also clear persisted drawings
         delete chat[roomName]; // clear chat history
+        //activeRooms.delete(roomName);     // remove from active rooms
         console.log(`Room ${roomName} deleted (empty)`);
       }
     });

@@ -33,7 +33,7 @@ export default function ChatPanel({ socket, roomName }: ChatPanelProps) {
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages]); //ensures auto sscroll only when messages change, dependency array
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -47,7 +47,7 @@ export default function ChatPanel({ socket, roomName }: ChatPanelProps) {
 
     setInput("");
   };
-
+  // === checks value AND type, == checks just value
   return (
     <div className={styles.ChatPanel}>
       <h3 className={styles.header}>Chat</h3>
